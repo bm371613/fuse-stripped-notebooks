@@ -111,7 +111,7 @@ Tests spawn the binary, mount it into a tempdir, and unmount on teardown. If a
 run crashes and leaves a stale mount, clean it up with:
 
 ```bash
-mount | grep notebookfs
+mount | grep fuse-stripped-notebooks
 fusermount3 -u <path>
 ```
 

@@ -21,6 +21,6 @@ fn main() {
     let args = Cli::parse();
     let mut cfg = Config::default();
     cfg.mount_options.push(MountOption::RO);
-    cfg.mount_options.push(MountOption::FSName("notebookfs".to_string()));
+    cfg.mount_options.push(MountOption::FSName("fuse-stripped-notebooks".to_string()));
     fuser::mount2(NotebookFs::new(args.source, args.mode), &args.mountpoint, &cfg).unwrap();
 }
