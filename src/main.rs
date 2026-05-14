@@ -24,11 +24,20 @@ struct Cli {
     source: PathBuf,
     #[arg(long)]
     mountpoint: PathBuf,
+    #[arg(long)]
+    mkdir: bool,
 }
 
 fn main() {
     env_logger::init();
     let args = Cli::parse();
+
+    let created_mountpoint = if args.mkdir && !args.mountpoint.exists() {
+        std::fs::create_dir(&args.mountpoint).expect("Failed to create mountpoint");
+        true
+    } else {
+        false
+    };
     let mut cfg = Config::default();
     cfg.mount_options.push(MountOption::RO);
     cfg.mount_options.push(MountOption::FSName("fuse-stripped-notebooks".to_string()));
@@ -67,5 +76,10 @@ fn main() {
     } else {
         drop(session);
         eprintln!("Unmounted.");
+    }
+    if created_mountpoint {
+        if let Err(e) = std::fs::remove_dir(&args.mountpoint) {
+            eprintln!("Warning: could not remove mountpoint: {e}");
+        }
     }
 }

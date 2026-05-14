@@ -329,6 +329,57 @@ fn sigterm_triggers_clean_unmount() {
 }
 
 #[test]
+fn mkdir_creates_and_removes_mountpoint() {
+    let source = tempfile::tempdir().unwrap();
+    copy_fixture("sample.txt", source.path());
+
+    // Use a path that does not exist yet inside a temp parent dir.
+    let parent = tempfile::tempdir().unwrap();
+    let mountpoint = parent.path().join("auto_created");
+    assert!(!mountpoint.exists(), "precondition: path must not exist before spawn");
+
+    let bin = env!("CARGO_BIN_EXE_fuse-stripped-notebooks");
+    let mut child = Command::new(bin)
+        .arg("--mode")
+        .arg("strip-outputs")
+        .arg("--source")
+        .arg(source.path())
+        .arg("--mountpoint")
+        .arg(&mountpoint)
+        .arg("--mkdir")
+        .spawn()
+        .expect("failed to spawn fuse binary");
+
+    wait_mounted(&mountpoint);
+    assert!(mountpoint.is_dir(), "mountpoint should exist after --mkdir");
+    assert!(fs::read_dir(&mountpoint).is_ok(), "mount should be readable");
+
+    // SIGTERM triggers the clean-shutdown path that also removes the directory.
+    let rc = unsafe { libc::kill(child.id() as libc::pid_t, libc::SIGTERM) };
+    assert_eq!(rc, 0, "kill() failed");
+
+    let deadline = Instant::now() + Duration::from_secs(5);
+    let exited = loop {
+        match child.try_wait().unwrap() {
+            Some(_) => break true,
+            None if Instant::now() < deadline => thread::sleep(Duration::from_millis(50)),
+            None => break false,
+        }
+    };
+    if !exited {
+        let _ = child.kill();
+        let _ = child.wait();
+        unmount(&mountpoint);
+        panic!("process did not exit within 5 s after SIGTERM");
+    }
+
+    assert!(
+        !mountpoint.exists(),
+        "mountpoint directory should be removed after clean exit with --mkdir"
+    );
+}
+
+#[test]
 fn unreadable_source_stays_unreadable_through_the_mount() {
     if unsafe { libc::geteuid() } == 0 {
         eprintln!("skipping unreadable-file test: running as root bypasses mode checks");
