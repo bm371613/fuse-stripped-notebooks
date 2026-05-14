@@ -18,7 +18,7 @@ extern "C" fn signal_handler(sig: libc::c_int) {
 
 #[derive(Parser)]
 struct Cli {
-    #[arg(long, value_enum, default_value = "strip-outputs")]
+    #[arg(long, value_enum, default_value = "python-script")]
     mode: Mode,
     #[arg(long)]
     source: PathBuf,

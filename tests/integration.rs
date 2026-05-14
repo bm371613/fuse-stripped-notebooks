@@ -134,7 +134,7 @@ print(msg)
 
 #[test]
 fn lists_directory_entries() {
-    let fs_ = MountedFs::new("strip-outputs", |src| {
+    let fs_ = MountedFs::new("python-script", |src| {
         copy_fixture("sample.txt", src);
         copy_fixture("sample.ipynb", src);
     });
@@ -148,7 +148,7 @@ fn lists_directory_entries() {
 
 #[test]
 fn txt_size_and_content_unchanged() {
-    let fs_ = MountedFs::new("strip-outputs", |src| {
+    let fs_ = MountedFs::new("python-script", |src| {
         copy_fixture("sample.txt", src);
     });
     let original = fs::read(fixture("sample.txt")).unwrap();
@@ -227,7 +227,7 @@ fn ipynb_python_script_mode_produces_expected_bytes() {
 
 #[test]
 fn write_to_txt_is_rejected() {
-    let fs_ = MountedFs::new("strip-outputs", |src| {
+    let fs_ = MountedFs::new("python-script", |src| {
         copy_fixture("sample.txt", src);
     });
     let err = fs::OpenOptions::new()
@@ -239,7 +239,7 @@ fn write_to_txt_is_rejected() {
 
 #[test]
 fn write_to_ipynb_is_rejected() {
-    let fs_ = MountedFs::new("strip-outputs", |src| {
+    let fs_ = MountedFs::new("python-script", |src| {
         copy_fixture("sample.ipynb", src);
     });
     let err = fs::OpenOptions::new()
@@ -261,7 +261,7 @@ fn assert_rejects_write(err: &std::io::Error) {
 
 #[test]
 fn preserves_uid_gid_and_timestamps() {
-    let fs_ = MountedFs::new("strip-outputs", |src| {
+    let fs_ = MountedFs::new("python-script", |src| {
         copy_fixture("sample.txt", src);
         copy_fixture("sample.ipynb", src);
     });
@@ -300,7 +300,7 @@ fn sigterm_triggers_clean_unmount() {
     let bin = env!("CARGO_BIN_EXE_fuse-stripped-notebooks");
     let mut child = Command::new(bin)
         .arg("--mode")
-        .arg("strip-outputs")
+        .arg("python-script")
         .arg("--source")
         .arg(source.path())
         .arg("--mountpoint")
@@ -352,7 +352,7 @@ fn mkdir_creates_and_removes_mountpoint() {
     let bin = env!("CARGO_BIN_EXE_fuse-stripped-notebooks");
     let mut child = Command::new(bin)
         .arg("--mode")
-        .arg("strip-outputs")
+        .arg("python-script")
         .arg("--source")
         .arg(source.path())
         .arg("--mountpoint")
@@ -399,7 +399,7 @@ fn unreadable_source_stays_unreadable_through_the_mount() {
         eprintln!("skipping unreadable-file test: running as root bypasses mode checks");
         return;
     }
-    let fs_ = MountedFs::new("strip-outputs", |src| {
+    let fs_ = MountedFs::new("python-script", |src| {
         let p = src.join("secret.txt");
         fs::write(&p, b"top secret").unwrap();
         fs::set_permissions(&p, fs::Permissions::from_mode(0o000)).unwrap();

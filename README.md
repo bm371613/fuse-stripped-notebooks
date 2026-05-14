@@ -6,14 +6,13 @@ unchanged.
 
 Two transform modes are available:
 
-- **`strip-outputs`** (default) — returns the notebook JSON with every cell's
-  `outputs` cleared and `execution_count` set to `null`. Useful for diffing
-  notebooks, code review, or feeding them to tools that choke on large embedded
-  outputs.
-- **`python-script`** — converts the notebook to a Python script: code cells are
-  emitted as-is and separated by `# ---`; markdown/raw cells become
+- **`python-script`** (default) — converts the notebook to a Python script: code
+  cells are emitted as-is and separated by `# ---`; markdown/raw cells become
   triple-quoted blocks. Useful for grep, static analysis, and IDEs that don't
   speak `.ipynb`.
+- **`strip-outputs`** — returns the notebook JSON with every cell's `outputs`
+  cleared and `execution_count` set to `null`. Useful for diffing notebooks,
+  code review, or feeding them to tools that choke on large embedded outputs.
 
 File names and the `.ipynb` extension are preserved, so existing tooling that
 walks the directory tree sees the transformed notebooks at their normal paths.
@@ -71,21 +70,21 @@ you want it to persist.
 ### Example
 
 ```bash
-mkdir -p /tmp/notebooks-stripped
-fuse-stripped-notebooks --source ~/work/notebooks --mountpoint /tmp/notebooks-stripped &
+mkdir -p /tmp/notebooks-py
+fuse-stripped-notebooks --source ~/work/notebooks --mountpoint /tmp/notebooks-py &
 
-ls /tmp/notebooks-stripped
-cat /tmp/notebooks-stripped/analysis.ipynb   # JSON with outputs stripped
+ls /tmp/notebooks-py
+cat /tmp/notebooks-py/analysis.ipynb   # Python-style script with outputs removed
 
 # In another shell, unmount when you're done:
-fusermount3 -u /tmp/notebooks-stripped
+fusermount3 -u /tmp/notebooks-py
 ```
 
-To get the Python-script view instead:
+To get the stripped-JSON view instead:
 
 ```bash
-fuse-stripped-notebooks --mode python-script --source ~/work/notebooks --mountpoint /tmp/notebooks-stripped
-cat /tmp/notebooks-py/analysis.ipynb         # now a .py-style script
+fuse-stripped-notebooks --mode strip-outputs --source ~/work/notebooks --mountpoint /tmp/notebooks-stripped
+cat /tmp/notebooks-stripped/analysis.ipynb   # JSON with outputs stripped
 ```
 
 ### Logging
