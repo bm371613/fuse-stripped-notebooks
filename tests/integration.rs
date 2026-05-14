@@ -114,8 +114,15 @@ fn unmount(p: &Path) {
 
 // Expected output for the python-script transform of sample.ipynb.
 // Markdown cells become triple-quoted blocks; code cells get `# ---` separators.
-const EXPECTED_PYTHON_SCRIPT: &str =
-    "\"\"\"\n# Test notebook\nSample for integration tests.\n\"\"\"\nmsg = \"hello\"\nprint(msg)\n# ---\n";
+const EXPECTED_PYTHON_SCRIPT: &str = r##"# --- cell 1 ---
+"""
+# Test notebook
+Sample for integration tests.
+"""
+# --- cell 2 ---
+msg = "hello"
+print(msg)
+"##;
 
 // ---------------------------------------------------------------------------
 // Tests

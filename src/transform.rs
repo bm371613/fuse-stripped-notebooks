@@ -24,7 +24,7 @@ pub fn to_python_script(raw: &[u8]) -> Result<Vec<u8>, io::Error> {
         None => return Ok(Vec::new()),
     };
     let mut out = Vec::new();
-    for cell in cells {
+    for (i, cell) in cells.iter().enumerate() {
         let cell_type = cell["cell_type"].as_str().unwrap_or("");
         let source = &cell["source"];
         let lines: Vec<&str> = match source {
@@ -32,6 +32,8 @@ pub fn to_python_script(raw: &[u8]) -> Result<Vec<u8>, io::Error> {
             Value::Array(arr) => arr.iter().filter_map(|v| v.as_str()).collect(),
             _ => continue,
         };
+        let header = format!("# --- cell {} ---\n", i + 1);
+        out.extend_from_slice(header.as_bytes());
         match cell_type {
             "markdown" | "raw" => {
                 out.extend_from_slice(b"\"\"\"\n");
@@ -46,7 +48,6 @@ pub fn to_python_script(raw: &[u8]) -> Result<Vec<u8>, io::Error> {
                     out.extend_from_slice(line.trim_end_matches('\n').as_bytes());
                     out.push(b'\n');
                 }
-                out.extend_from_slice(b"# ---\n");
             }
             _ => {}
         }
