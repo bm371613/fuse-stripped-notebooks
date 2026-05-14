@@ -17,13 +17,24 @@ extern "C" fn signal_handler(sig: libc::c_int) {
 }
 
 #[derive(Parser)]
+#[command(version, about = None, long_about="Run FUSE stripping notebooks until stopped by signal or external umount")]
 struct Cli {
+    /// How .ipynb files are transformed.
+    ///
+    /// python-script:
+    ///     Code and Markdown input cell content divided by comments with cell numbers
+    ///
+    /// strip-outputs:
+    ///     Notebook content without output cells and execution count
     #[arg(long, value_enum, default_value = "python-script")]
     mode: Mode,
+    /// Directory containing source notebooks
     #[arg(long)]
     source: PathBuf,
+    /// Directory to mount the virtual filesystem at
     #[arg(long)]
     mountpoint: PathBuf,
+    /// Create the mountpoint directory if it does not exist
     #[arg(long)]
     mkdir: bool,
 }
