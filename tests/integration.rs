@@ -37,7 +37,9 @@ impl MountedFs {
         let child = Command::new(bin)
             .arg("--mode")
             .arg(mode)
+            .arg("--source")
             .arg(source.path())
+            .arg("--mountpoint")
             .arg(mountpoint.path())
             .spawn()
             .expect("failed to spawn fuse binary");

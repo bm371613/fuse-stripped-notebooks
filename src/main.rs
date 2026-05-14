@@ -12,7 +12,9 @@ use fs::{Mode, NotebookFs};
 struct Cli {
     #[arg(long, value_enum, default_value = "strip-outputs")]
     mode: Mode,
+    #[arg(long)]
     source: PathBuf,
+    #[arg(long)]
     mountpoint: PathBuf,
 }
 

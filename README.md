@@ -61,11 +61,8 @@ cargo install --path .
 ## Usage
 
 ```bash
-fuse-stripped-notebooks [--mode <strip-outputs|python-script>] <source> <mountpoint>
+fuse-stripped-notebooks [--mode <strip-outputs|python-script>] --source <source> --mountpoint <mountpoint>
 ```
-
-- `<source>` — the directory to mirror.
-- `<mountpoint>` — an existing empty directory where the mirror should appear.
 
 The process runs in the foreground and blocks until the filesystem is
 unmounted. Run it under `nohup`, a terminal multiplexer, or a systemd unit if
@@ -75,7 +72,7 @@ you want it to persist.
 
 ```bash
 mkdir -p /tmp/notebooks-stripped
-fuse-stripped-notebooks ~/work/notebooks /tmp/notebooks-stripped &
+fuse-stripped-notebooks --source ~/work/notebooks --mountpoint /tmp/notebooks-stripped &
 
 ls /tmp/notebooks-stripped
 cat /tmp/notebooks-stripped/analysis.ipynb   # JSON with outputs stripped
@@ -87,7 +84,7 @@ fusermount3 -u /tmp/notebooks-stripped
 To get the Python-script view instead:
 
 ```bash
-fuse-stripped-notebooks --mode python-script ~/work/notebooks /tmp/notebooks-py
+fuse-stripped-notebooks --mode python-script --source ~/work/notebooks --mountpoint /tmp/notebooks-stripped
 cat /tmp/notebooks-py/analysis.ipynb         # now a .py-style script
 ```
 
@@ -96,7 +93,7 @@ cat /tmp/notebooks-py/analysis.ipynb         # now a .py-style script
 The binary uses `env_logger`. Set `RUST_LOG` to see what's happening:
 
 ```bash
-RUST_LOG=debug fuse-stripped-notebooks ~/work/notebooks /tmp/mnt
+RUST_LOG=debug fuse-stripped-notebooks --source ~/work/notebooks --mountpoint /tmp/notebooks-stripped
 ```
 
 ## Development
