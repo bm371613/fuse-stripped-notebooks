@@ -51,8 +51,12 @@ cd fuse-stripped-notebooks
 cargo build --release
 ```
 
-The binary lands at `target/release/fuse-stripped-notebooks`. Copy it somewhere
-on your `PATH` if you want, or invoke it directly.
+The binary lands at `target/release/fuse-stripped-notebooks`. To install it to
+`~/.cargo/bin` (which is usually on your `PATH`):
+
+```bash
+cargo install --path .
+```
 
 ## Usage
 
