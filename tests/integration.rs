@@ -94,17 +94,17 @@ fn is_mountpoint(p: &Path) -> bool {
         .map(|content| {
             content
                 .lines()
-                .any(|line| line.split_whitespace().nth(4).map_or(false, |m| m == target))
+                .any(|line| line.split_whitespace().nth(4).is_some_and(|m| m == target))
         })
         .unwrap_or(false)
 }
 
 fn unmount(p: &Path) {
     for tool in ["fusermount3", "fusermount"] {
-        if let Ok(status) = Command::new(tool).arg("-u").arg(p).status() {
-            if status.success() {
-                return;
-            }
+        if let Ok(status) = Command::new(tool).arg("-u").arg(p).status()
+            && status.success()
+        {
+            return;
         }
     }
     eprintln!("warning: failed to unmount {p:?}");
