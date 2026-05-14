@@ -40,7 +40,8 @@ fn main() {
     };
     let mut cfg = Config::default();
     cfg.mount_options.push(MountOption::RO);
-    cfg.mount_options.push(MountOption::FSName("fuse-stripped-notebooks".to_string()));
+    cfg.mount_options
+        .push(MountOption::FSName("fuse-stripped-notebooks".to_string()));
 
     unsafe {
         let mut sa: libc::sigaction = std::mem::zeroed();
@@ -59,8 +60,7 @@ fn main() {
     let externally_unmounted = loop {
         let sig = SIGNAL_RECEIVED.load(Ordering::Relaxed);
         if sig != 0 {
-            let name = unsafe { CStr::from_ptr(libc::strsignal(sig)) }
-                .to_string_lossy();
+            let name = unsafe { CStr::from_ptr(libc::strsignal(sig)) }.to_string_lossy();
             eprintln!("\nReceived signal: {name}");
             break false;
         }

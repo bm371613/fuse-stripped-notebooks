@@ -3,8 +3,8 @@ use std::io;
 use serde_json::Value;
 
 pub fn strip_outputs(raw: &[u8]) -> Result<Vec<u8>, io::Error> {
-    let mut notebook: Value = serde_json::from_slice(raw)
-        .map_err(|e| io::Error::new(io::ErrorKind::InvalidData, e))?;
+    let mut notebook: Value =
+        serde_json::from_slice(raw).map_err(|e| io::Error::new(io::ErrorKind::InvalidData, e))?;
     if let Some(cells) = notebook["cells"].as_array_mut() {
         for cell in cells {
             if cell["cell_type"] == "code" {
@@ -17,8 +17,8 @@ pub fn strip_outputs(raw: &[u8]) -> Result<Vec<u8>, io::Error> {
 }
 
 pub fn to_python_script(raw: &[u8]) -> Result<Vec<u8>, io::Error> {
-    let notebook: Value = serde_json::from_slice(raw)
-        .map_err(|e| io::Error::new(io::ErrorKind::InvalidData, e))?;
+    let notebook: Value =
+        serde_json::from_slice(raw).map_err(|e| io::Error::new(io::ErrorKind::InvalidData, e))?;
     let cells = match notebook["cells"].as_array() {
         Some(c) => c,
         None => return Ok(Vec::new()),

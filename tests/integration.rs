@@ -45,7 +45,11 @@ impl MountedFs {
             .expect("failed to spawn fuse binary");
 
         wait_mounted(mountpoint.path());
-        Self { child, mountpoint, source }
+        Self {
+            child,
+            mountpoint,
+            source,
+        }
     }
 
     fn mnt(&self) -> &Path {
@@ -182,7 +186,8 @@ fn ipynb_strip_size_matches_read_and_drops_outputs() {
         "stripped ipynb ({stat_size} B) should be smaller than the source ({source_size} B)"
     );
 
-    let json: serde_json::Value = serde_json::from_slice(&bytes).expect("stripped ipynb is valid JSON");
+    let json: serde_json::Value =
+        serde_json::from_slice(&bytes).expect("stripped ipynb is valid JSON");
     let cells = json["cells"].as_array().expect("cells is an array");
     let mut saw_code_cell = false;
     for cell in cells {
@@ -199,7 +204,10 @@ fn ipynb_strip_size_matches_read_and_drops_outputs() {
             );
         }
     }
-    assert!(saw_code_cell, "fixture should include at least one code cell");
+    assert!(
+        saw_code_cell,
+        "fixture should include at least one code cell"
+    );
 }
 
 #[test]
@@ -336,7 +344,10 @@ fn mkdir_creates_and_removes_mountpoint() {
     // Use a path that does not exist yet inside a temp parent dir.
     let parent = tempfile::tempdir().unwrap();
     let mountpoint = parent.path().join("auto_created");
-    assert!(!mountpoint.exists(), "precondition: path must not exist before spawn");
+    assert!(
+        !mountpoint.exists(),
+        "precondition: path must not exist before spawn"
+    );
 
     let bin = env!("CARGO_BIN_EXE_fuse-stripped-notebooks");
     let mut child = Command::new(bin)
@@ -352,7 +363,10 @@ fn mkdir_creates_and_removes_mountpoint() {
 
     wait_mounted(&mountpoint);
     assert!(mountpoint.is_dir(), "mountpoint should exist after --mkdir");
-    assert!(fs::read_dir(&mountpoint).is_ok(), "mount should be readable");
+    assert!(
+        fs::read_dir(&mountpoint).is_ok(),
+        "mount should be readable"
+    );
 
     // SIGTERM triggers the clean-shutdown path that also removes the directory.
     let rc = unsafe { libc::kill(child.id() as libc::pid_t, libc::SIGTERM) };
@@ -391,12 +405,11 @@ fn unreadable_source_stays_unreadable_through_the_mount() {
         fs::set_permissions(&p, fs::Permissions::from_mode(0o000)).unwrap();
     });
 
-    let err = fs::read(fs_.mnt().join("secret.txt"))
-        .expect_err("reading a mode-0 file should fail");
+    let err =
+        fs::read(fs_.mnt().join("secret.txt")).expect_err("reading a mode-0 file should fail");
     assert_eq!(
         err.kind(),
         ErrorKind::PermissionDenied,
         "expected EACCES, got {err:?}"
     );
 }
-

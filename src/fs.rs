@@ -52,7 +52,10 @@ impl NotebookFs {
         let mut path_index = HashMap::new();
         inodes.insert(
             INodeNo::ROOT.0,
-            InodeEntry { real_path: source.clone(), kind: FileType::Directory },
+            InodeEntry {
+                real_path: source.clone(),
+                kind: FileType::Directory,
+            },
         );
         path_index.insert(source.clone(), INodeNo::ROOT.0);
         NotebookFs {
@@ -79,7 +82,13 @@ fn assign_or_lookup_ino(state: &mut FsState, real_path: PathBuf) -> Option<(u64,
     let kind = FileType::from_std(meta.file_type())?;
     let ino = state.next_ino;
     state.next_ino += 1;
-    state.inodes.insert(ino, InodeEntry { real_path: real_path.clone(), kind });
+    state.inodes.insert(
+        ino,
+        InodeEntry {
+            real_path: real_path.clone(),
+            kind,
+        },
+    );
     state.path_index.insert(real_path, ino);
     Some((ino, kind))
 }
@@ -232,7 +241,11 @@ impl Filesystem for NotebookFs {
         let parent_ino = if ino == INodeNo::ROOT {
             INodeNo::ROOT.0
         } else if let Some(parent_path) = dir_path.parent() {
-            state.path_index.get(parent_path).copied().unwrap_or(INodeNo::ROOT.0)
+            state
+                .path_index
+                .get(parent_path)
+                .copied()
+                .unwrap_or(INodeNo::ROOT.0)
         } else {
             INodeNo::ROOT.0
         };
@@ -246,8 +259,7 @@ impl Filesystem for NotebookFs {
             let children: Vec<_> = read_dir.flatten().collect();
             for entry in children {
                 let child_path = entry.path();
-                if let Some((child_ino, child_kind)) =
-                    assign_or_lookup_ino(&mut state, child_path)
+                if let Some((child_ino, child_kind)) = assign_or_lookup_ino(&mut state, child_path)
                 {
                     entries.push((child_ino, child_kind, entry.file_name()));
                 }
