@@ -6,7 +6,7 @@ unchanged.
 
 ## Why
 
-Outputs in `.ipynb` mix code and outputs, which is bad for tools like `grep`.
+Notebooks (`.ipynb` files) mix code and outputs, which is bad for tools like `grep`.
 
 ## Example
 
