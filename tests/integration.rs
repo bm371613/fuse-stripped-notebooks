@@ -284,6 +284,51 @@ fn preserves_uid_gid_and_timestamps() {
 }
 
 #[test]
+fn sigterm_triggers_clean_unmount() {
+    let source = tempfile::tempdir().unwrap();
+    copy_fixture("sample.txt", source.path());
+
+    let mountpoint = tempfile::tempdir().unwrap();
+    let bin = env!("CARGO_BIN_EXE_fuse-stripped-notebooks");
+    let mut child = Command::new(bin)
+        .arg("--mode")
+        .arg("strip-outputs")
+        .arg("--source")
+        .arg(source.path())
+        .arg("--mountpoint")
+        .arg(mountpoint.path())
+        .spawn()
+        .expect("failed to spawn fuse binary");
+
+    wait_mounted(mountpoint.path());
+
+    // Send SIGTERM; the binary catches it, drops the FUSE session, and exits cleanly.
+    let rc = unsafe { libc::kill(child.id() as libc::pid_t, libc::SIGTERM) };
+    assert_eq!(rc, 0, "kill() failed");
+
+    // Wait up to 5 s for the process to exit.
+    let deadline = Instant::now() + Duration::from_secs(5);
+    let exited = loop {
+        match child.try_wait().unwrap() {
+            Some(_) => break true,
+            None if Instant::now() < deadline => thread::sleep(Duration::from_millis(50)),
+            None => break false,
+        }
+    };
+    if !exited {
+        let _ = child.kill();
+        let _ = child.wait();
+        unmount(mountpoint.path());
+        panic!("process did not exit within 5 s after SIGTERM");
+    }
+
+    assert!(
+        !is_mountpoint(mountpoint.path()),
+        "mount should be gone after clean SIGTERM exit"
+    );
+}
+
+#[test]
 fn unreadable_source_stays_unreadable_through_the_mount() {
     if unsafe { libc::geteuid() } == 0 {
         eprintln!("skipping unreadable-file test: running as root bypasses mode checks");
