@@ -10,3 +10,6 @@ fuser = "0.17.0"
 libc = "0.2.186"
 log = "0.4.29"
 serde_json = "1.0.149"
+
+[dev-dependencies]
+tempfile = "3"

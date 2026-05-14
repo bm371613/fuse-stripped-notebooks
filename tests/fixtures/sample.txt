@@ -1,0 +1,2 @@
+Hello from the test fixture.
+Line two has some content.
