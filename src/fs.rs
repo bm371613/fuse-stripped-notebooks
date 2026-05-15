@@ -32,11 +32,17 @@ pub struct NotebookFs {
     inner: Mutex<FsState>,
 }
 
+struct CachedContent {
+    data: Arc<Vec<u8>>,
+    mtime_sec: i64,
+    mtime_nsec: i64,
+}
+
 struct FsState {
     next_ino: u64,
     inodes: HashMap<u64, InodeEntry>,
     path_index: HashMap<PathBuf, u64>,
-    content_cache: HashMap<u64, Arc<Vec<u8>>>,
+    content_cache: HashMap<u64, CachedContent>,
     open_files: HashMap<u64, File>,
     next_fh: u64,
 }
@@ -103,8 +109,14 @@ fn get_or_transform(
     path: &Path,
     mode: &Mode,
 ) -> Result<Arc<Vec<u8>>, io::Error> {
+    let meta = fs::symlink_metadata(path)?;
+    let mtime_sec = meta.mtime();
+    let mtime_nsec = meta.mtime_nsec();
     if let Some(cached) = state.content_cache.get(&ino) {
-        return Ok(Arc::clone(cached));
+        if cached.mtime_sec == mtime_sec && cached.mtime_nsec == mtime_nsec {
+            return Ok(Arc::clone(&cached.data));
+        }
+        state.content_cache.remove(&ino);
     }
     let raw = fs::read(path)?;
     let transformed = match mode {
@@ -112,7 +124,14 @@ fn get_or_transform(
         Mode::PythonScript => crate::transform::to_python_script(&raw)?,
     };
     let arc = Arc::new(transformed);
-    state.content_cache.insert(ino, Arc::clone(&arc));
+    state.content_cache.insert(
+        ino,
+        CachedContent {
+            data: Arc::clone(&arc),
+            mtime_sec,
+            mtime_nsec,
+        },
+    );
     Ok(arc)
 }
 
