@@ -422,6 +422,42 @@ fn source_file_replaced_reflects_new_content_through_mount() {
 }
 
 #[test]
+fn missing_source_exits_nonzero_without_mounting() {
+    let mountpoint = tempfile::tempdir().unwrap();
+    let bin = env!("CARGO_BIN_EXE_fuse-stripped-notebooks");
+    let mut child = Command::new(bin)
+        .arg("--source")
+        .arg("/nonexistent/path/that/cannot/exist")
+        .arg("--mountpoint")
+        .arg(mountpoint.path())
+        .spawn()
+        .expect("failed to spawn fuse binary");
+
+    let deadline = Instant::now() + Duration::from_secs(1);
+    let status = loop {
+        match child.try_wait().unwrap() {
+            Some(s) => break s,
+            None if Instant::now() < deadline => thread::sleep(Duration::from_millis(50)),
+            None => {
+                let _ = child.kill();
+                let _ = child.wait();
+                unmount(mountpoint.path());
+                panic!("binary did not exit within 5 s — source validation may be missing");
+            }
+        }
+    };
+
+    assert!(
+        !status.success(),
+        "binary should exit with non-zero status when source does not exist"
+    );
+    assert!(
+        !is_mountpoint(mountpoint.path()),
+        "no FUSE mount should be established when source is missing"
+    );
+}
+
+#[test]
 fn unreadable_source_stays_unreadable_through_the_mount() {
     if unsafe { libc::geteuid() } == 0 {
         eprintln!("skipping unreadable-file test: running as root bypasses mode checks");

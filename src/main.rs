@@ -43,6 +43,13 @@ fn main() {
     env_logger::init();
     let args = Cli::parse();
 
+    if !args.source.is_dir() {
+        eprintln!(
+            "error: source {:?} does not exist or is not a directory",
+            args.source
+        );
+        std::process::exit(1);
+    }
     let created_mountpoint = if args.mkdir && !args.mountpoint.exists() {
         std::fs::create_dir(&args.mountpoint).expect("Failed to create mountpoint");
         true
