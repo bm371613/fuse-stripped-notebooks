@@ -394,6 +394,34 @@ fn mkdir_creates_and_removes_mountpoint() {
 }
 
 #[test]
+fn source_file_replaced_reflects_new_content_through_mount() {
+    let fs_ = MountedFs::new("python-script", |src| {
+        copy_fixture("sample.ipynb", src);
+        copy_fixture("sample_v2.ipynb", src);
+    });
+    let mnt_path = fs_.mnt().join("sample.ipynb");
+
+    let first_read = fs::read_to_string(&mnt_path).unwrap();
+    assert!(
+        first_read.contains("hello"),
+        "first read should contain 'hello'; got:\n{first_read}"
+    );
+
+    // Overwrite sample.ipynb in the source tempdir with the v2 version (prints "world").
+    fs::copy(
+        fs_.src().join("sample_v2.ipynb"),
+        fs_.src().join("sample.ipynb"),
+    )
+    .unwrap();
+
+    let second_read = fs::read_to_string(&mnt_path).unwrap();
+    assert!(
+        second_read.contains("world"),
+        "second read should contain 'world' after source replacement; got:\n{second_read}"
+    );
+}
+
+#[test]
 fn unreadable_source_stays_unreadable_through_the_mount() {
     if unsafe { libc::geteuid() } == 0 {
         eprintln!("skipping unreadable-file test: running as root bypasses mode checks");
